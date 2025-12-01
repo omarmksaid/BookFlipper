@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/BookFlipper/static/css/main.4a942a41.css",
-    "main.js": "/BookFlipper/static/js/main.cde1e94b.js",
+    "main.js": "/BookFlipper/static/js/main.3857abfc.js",
     "index.html": "/BookFlipper/index.html",
     "main.4a942a41.css.map": "/BookFlipper/static/css/main.4a942a41.css.map",
-    "main.cde1e94b.js.map": "/BookFlipper/static/js/main.cde1e94b.js.map"
+    "main.3857abfc.js.map": "/BookFlipper/static/js/main.3857abfc.js.map"
   },
   "entrypoints": [
     "static/css/main.4a942a41.css",
-    "static/js/main.cde1e94b.js"
+    "static/js/main.3857abfc.js"
   ]
 }
