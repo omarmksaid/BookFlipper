@@ -223,7 +223,7 @@ function App() {
   const checkAndLoadPDF = async (pdfName) => {
     setIsLoading(true);
     try {
-      const pdfPath = `${pdfName}.pdf`;
+      const pdfPath = `${process.env.PUBLIC_URL || ''}/${pdfName}.pdf`;
       console.log('Attempting to load PDF:', pdfPath);
       const response = await fetch(pdfPath);
       if (!response.ok) {
