@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/BookFlipper/static/css/main.ad46061a.css",
+    "main.js": "/BookFlipper/static/js/main.29aa9b41.js",
+    "index.html": "/BookFlipper/index.html",
+    "main.ad46061a.css.map": "/BookFlipper/static/css/main.ad46061a.css.map",
+    "main.29aa9b41.js.map": "/BookFlipper/static/js/main.29aa9b41.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ad46061a.css",
+    "static/js/main.29aa9b41.js"
+  ]
+}
