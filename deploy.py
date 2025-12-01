@@ -93,10 +93,26 @@ def main():
     run_command(f"git remote set-url origin {remote_url}")
     
     print("⬆️ Pushing to GitHub...")
-    push_result = subprocess.run("git push -u origin main", shell=True, capture_output=True, text=True)
-    if push_result.returncode != 0:
-        print(f"❌ Failed to push to GitHub: {push_result.stderr}")
-        print("Check your token permissions (needs 'repo' scope)")
+    try:
+        push_result = subprocess.run(
+            "git push -u origin main", 
+            shell=True, 
+            capture_output=True, 
+            text=True, 
+            timeout=60  # 60 second timeout
+        )
+        if push_result.returncode != 0:
+            print(f"❌ Failed to push to GitHub: {push_result.stderr}")
+            print("Check your token permissions (needs 'repo' scope)")
+            return
+    except subprocess.TimeoutExpired:
+        print("❌ Push timed out. This might be due to:")
+        print("1. Network issues")
+        print("2. Large repository size")
+        print("3. GitHub authentication problems")
+        return
+    except Exception as e:
+        print(f"❌ Push failed: {e}")
         return
     
     print("✅ Code pushed to GitHub successfully!")
