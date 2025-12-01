@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip Book Creator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Flip Book Creator</h1>
+        
+        <div id="upload-section">
+            <div class="upload-area">
+                <input type="file" id="pdf-input" accept=".pdf" />
+                <label for="pdf-input">
+                    <div class="upload-text">
+                        <span>📄</span>
+                        <p>Click to upload PDF or drag and drop</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div id="flipbook-container" style="display: none;">
+            <div class="flipbook" id="flipbook">
+                <!-- Pages will be dynamically added here -->
+            </div>
+            <div class="controls">
+                <button id="prev-btn">← Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-btn">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
