@@ -14,24 +14,56 @@ function App() {
   const fileInputRef = useRef(null);
   
   useEffect(() => {
+    // Load StPageFlip script
+    if (!window.St) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js';
+      document.head.appendChild(script);
+    }
+    
     const currentPath = window.location.pathname;
     if (currentPath !== '/') {
       const pdfName = currentPath.slice(1);
       console.log('Checking for PDF:', pdfName);
-      
-      // Check if script already exists
-      if (!window.St) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js';
-        script.onload = () => {
-          checkAndLoadPDF(pdfName);
-        };
-        document.head.appendChild(script);
-      } else {
-        checkAndLoadPDF(pdfName);
-      }
+      checkAndLoadPDF(pdfName);
     }
   }, []);
+  
+  useEffect(() => {
+    if (pageImages.length > 0 && window.St) {
+      initializeFlipBook();
+    }
+  }, [pageImages]);
+  
+  const initializeFlipBook = () => {
+    const flipbookDiv = document.getElementById('flipbook');
+    if (!flipbookDiv) return;
+    
+    // Clear existing content
+    flipbookDiv.innerHTML = '';
+    
+    // Add pages
+    pageImages.forEach((page, index) => {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'page';
+      pageDiv.style.cssText = 'background: white; display: flex; align-items: center; justify-content: center;';
+      pageDiv.innerHTML = `<img src="${page}" alt="Page ${index + 1}" style="width: 100%; height: 100%; object-fit: contain;">`;
+      flipbookDiv.appendChild(pageDiv);
+    });
+    
+    // Initialize StPageFlip
+    const isMobile = window.innerWidth <= 768;
+    const pageFlip = new window.St.PageFlip(flipbookDiv, {
+      width: isMobile ? window.innerWidth * 0.9 : 400,
+      height: window.innerHeight * 0.95,
+      mobileScrollSupport: true,
+      usePortrait: isMobile,
+      maxShadowOpacity: 0,
+      drawShadow: false
+    });
+    
+    pageFlip.loadFromHTML(flipbookDiv.querySelectorAll('.page'));
+  };
 
   const createFlipBookHTML = (pageImages) => {
     return `<!DOCTYPE html>
@@ -41,10 +73,13 @@ function App() {
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
   <style>
     body { margin: 0; background: rgb(80,80,80); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
-    #flipbook { box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 85vw; max-height: 85vh; transition: transform 0.3s ease; }
-    @media (min-width: 1025px) { #flipbook { max-height: 75vh; } }
+    #flipbook { box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90vw; height: 80vh; transition: transform 0.3s ease; }
+    @media (min-width: 1025px) { #flipbook { height: 75vh; } }
     .page { background: white; display: flex; align-items: center; justify-content: center; }
     .page img { width: 100%; height: 100%; object-fit: contain; }
+    .stf__item { background: white !important; }
+    .stf__outerShadow { opacity: 0.8 !important; }
+    .stf__innerShadow { opacity: 0.6 !important; }
     .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 800px; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
     .control-group { display: flex; align-items: center; gap: 15px; }
     .control-btn { background: none; border: none; color: white; cursor: pointer; padding: 8px; border-radius: 4px; transition: opacity 0.2s; }
@@ -97,17 +132,19 @@ function App() {
     });
     
     const pageFlip = new St.PageFlip(flipbookDiv, {
-      width: 400,
-      height: 600,
+      width: Math.min(window.innerWidth * 0.8, 1200),
+      height: Math.min(window.innerHeight * 0.7, 800),
       size: 'stretch',
-      minWidth: 315,
-      maxWidth: 1000,
+      minWidth: 600,
+      maxWidth: 1400,
       minHeight: 400,
-      maxHeight: 1533,
-      maxShadowOpacity: 0.5,
+      maxHeight: 1000,
+      maxShadowOpacity: 0.8,
       showCover: false,
       startPage: 0,
-      mobileScrollSupport: true
+      mobileScrollSupport: true,
+      drawShadow: true,
+      usePortrait: true
     });
     
     pageFlip.loadFromHTML(document.querySelectorAll('.page'));
@@ -195,8 +232,11 @@ function App() {
   const processPDF = async (arrayBuffer, openInNewTab = true) => {
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
     const images = [];
+    
+    console.log(`Processing PDF with ${pdf.numPages} pages`);
 
     for (let i = 1; i <= pdf.numPages; i++) {
+      console.log(`Processing page ${i} of ${pdf.numPages}`);
       const page = await pdf.getPage(i);
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -207,8 +247,15 @@ function App() {
       
       await page.render({ canvasContext: context, viewport }).promise;
       images.push(canvas.toDataURL());
+      
+      // Update state with current progress
+      if (!openInNewTab) {
+        setPageImages([...images]);
+      }
     }
 
+    console.log(`Finished processing ${images.length} pages`);
+    
     if (openInNewTab) {
       const newWindow = window.open('', '_blank');
       if (newWindow) {
@@ -230,7 +277,7 @@ function App() {
         throw new Error(`PDF not found: ${response.status}`);
       }
       const arrayBuffer = await response.arrayBuffer();
-      await processPDF(arrayBuffer, true);
+      await processPDF(arrayBuffer, false);
     } catch (error) {
       console.error('PDF not found:', pdfName);
     } finally {
@@ -248,9 +295,34 @@ function App() {
     setIsLoading(true);
     try {
       const arrayBuffer = await file.arrayBuffer();
-      await processPDF(arrayBuffer);
+      await processPDF(arrayBuffer, false);
     } catch (error) {
       alert('Error processing PDF');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePDFLink = async (url) => {
+    if (!url) return;
+    
+    // Convert Google Drive share link to direct download link
+    let pdfUrl = url;
+    if (url.includes('drive.google.com')) {
+      const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+      if (fileId) {
+        pdfUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      }
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error('Failed to fetch PDF');
+      const arrayBuffer = await response.arrayBuffer();
+      await processPDF(arrayBuffer, false);
+    } catch (error) {
+      alert('Error loading PDF from link');
     } finally {
       setIsLoading(false);
     }
@@ -261,16 +333,20 @@ function App() {
   
   if (isPDFRoute) {
     return (
-      <div className="app">
-        <h1>PDF Flip Book</h1>
+      <div style={{margin: 0, background: '#f8f8f8', minHeight: '100vh'}}>
         {isLoading ? (
-          <div className="loading">
+          <div className="loading" style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>
             <div className="spinner"></div>
             <p>Processing PDF...</p>
           </div>
+        ) : pageImages.length > 0 ? (
+          <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh'}}>
+            <div id="flipbook"></div>
+          </div>
         ) : (
-          <div>
-            <h2>PDF "{currentPath.slice(1)}.pdf" not found</h2>
+          <div className="app">
+            <h1>PDF Not Found</h1>
+            <p>The PDF "{currentPath.slice(1)}.pdf" was not found.</p>
             <button 
               className="upload-btn" 
               onClick={() => fileInputRef.current?.click()}
@@ -290,18 +366,29 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <h1>PDF Flip Book</h1>
+    <div style={{margin: 0, background: '#f8f8f8', minHeight: '100vh'}}>
       {isLoading ? (
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Processing PDF...</p>
+        <div className="loading" style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'black', textAlign: 'center'}}>
+          <div className="spinner" style={{border: '4px solid #f3f3f3', borderTop: '4px solid #3498db', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 2s linear infinite', margin: '0 auto 20px'}}></div>
+          <p>Processing PDF... Found {pageImages.length} pages so far</p>
+        </div>
+      ) : pageImages.length > 0 ? (
+        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh'}}>
+          <div id="flipbook"></div>
         </div>
       ) : (
-        <>
+        <div className="app" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Arial, sans-serif'}}>
+          <h1 style={{color: 'black'}}>PDF Flip Book</h1>
+          <input
+            type="text"
+            placeholder="Enter Google Drive PDF link"
+            style={{padding: '12px', fontSize: '16px', width: '400px', marginBottom: '10px', border: '1px solid #ccc', borderRadius: '4px'}}
+            onKeyPress={(e) => e.key === 'Enter' && handlePDFLink(e.target.value)}
+          />
           <button 
             className="upload-btn" 
             onClick={() => fileInputRef.current?.click()}
+            style={{padding: '12px 24px', fontSize: '16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginBottom: '20px'}}
           >
             Upload PDF File
           </button>
@@ -310,9 +397,16 @@ function App() {
             type="file"
             accept=".pdf"
             onChange={handleFileUpload}
+            style={{display: 'none'}}
           />
-        </>
+        </div>
       )}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
