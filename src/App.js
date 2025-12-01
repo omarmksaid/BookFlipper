@@ -315,12 +315,12 @@ function App() {
   const handlePDFLink = async (url) => {
     if (!url) return;
     
-    // Convert Google Drive share link to direct download link
+    // Convert Google Drive share link to viewer link that works with CORS proxy
     let pdfUrl = url;
     if (url.includes('drive.google.com')) {
       const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
       if (fileId) {
-        pdfUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        pdfUrl = `https://cors-anywhere.herokuapp.com/https://drive.google.com/uc?export=download&id=${fileId}`;
       }
     }
 
@@ -331,7 +331,7 @@ function App() {
       const arrayBuffer = await response.arrayBuffer();
       await processPDF(arrayBuffer, false);
     } catch (error) {
-      alert('Error loading PDF from link');
+      alert('Error loading PDF from link. Make sure the PDF is publicly accessible or try uploading the file instead.');
     } finally {
       setIsLoading(false);
     }
