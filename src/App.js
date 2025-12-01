@@ -14,6 +14,9 @@ function App() {
   const fileInputRef = useRef(null);
   
   useEffect(() => {
+    // Set page title
+    document.title = 'PDF Flip Book';
+    
     // Load StPageFlip script
     if (!window.St) {
       const script = document.createElement('script');
