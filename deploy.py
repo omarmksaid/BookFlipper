@@ -15,17 +15,26 @@ def run_command(cmd, cwd=None):
     return result.stdout.strip()
 
 def main():
-    # Get GitHub credentials
-    print("Note: Enter your GitHub USERNAME (not email address)")
-    print("Example: if your profile is github.com/johndoe, enter 'johndoe'")
-    username = input("Enter your GitHub username: ").strip()
+    # Get GitHub token
     token = getpass.getpass("Enter your GitHub token (classic): ").strip()
     repo_name = "BookFlipper"
     
-    # Validate username
-    if '@' in username or '.' in username:
-        print("❌ Please enter your GitHub username, not email address")
-        print(f"Example: if your GitHub URL is github.com/{username.split('@')[0]}, enter '{username.split('@')[0]}'")
+    # Get username from GitHub API
+    print("🔍 Getting your GitHub username...")
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    try:
+        user_response = requests.get("https://api.github.com/user", headers=headers)
+        if user_response.status_code != 200:
+            print("❌ Invalid token or API error")
+            return
+        username = user_response.json()["login"]
+        print(f"✅ Found username: {username}")
+    except Exception as e:
+        print(f"❌ Error getting username: {e}")
         return
     
     print("🚀 Starting deployment process...")
@@ -54,11 +63,6 @@ def main():
         "name": repo_name,
         "description": "PDF Flip Book Creator",
         "private": False
-    }
-    
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
     }
     
     try:
