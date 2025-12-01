@@ -16,9 +16,17 @@ def run_command(cmd, cwd=None):
 
 def main():
     # Get GitHub credentials
-    username = input("Enter your GitHub username: ")
-    token = getpass.getpass("Enter your GitHub token (classic): ")
+    print("Note: Enter your GitHub USERNAME (not email address)")
+    print("Example: if your profile is github.com/johndoe, enter 'johndoe'")
+    username = input("Enter your GitHub username: ").strip()
+    token = getpass.getpass("Enter your GitHub token (classic): ").strip()
     repo_name = "BookFlipper"
+    
+    # Validate username
+    if '@' in username or '.' in username:
+        print("❌ Please enter your GitHub username, not email address")
+        print(f"Example: if your GitHub URL is github.com/{username.split('@')[0]}, enter '{username.split('@')[0]}'")
+        return
     
     print("🚀 Starting deployment process...")
     
@@ -70,8 +78,14 @@ def main():
     
     # Add remote and push with token
     print("🔗 Setting up GitHub remote...")
-    run_command(f"git remote remove origin")  # Remove if exists
-    run_command(f"git remote add origin https://{token}@github.com/{username}/{repo_name}.git")
+    # Remove existing remote (ignore errors)
+    subprocess.run("git remote remove origin", shell=True, capture_output=True)
+    
+    remote_url = f"https://{token}@github.com/{username}/{repo_name}.git"
+    result = run_command(f"git remote add origin {remote_url}")
+    if not result:
+        print("❌ Failed to add remote. Check your username and token.")
+        return
     
     print("⬆️ Pushing to GitHub...")
     result = run_command("git push -u origin main")
