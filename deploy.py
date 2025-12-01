@@ -86,15 +86,17 @@ def main():
     subprocess.run("git remote remove origin", shell=True, capture_output=True)
     
     remote_url = f"https://{token}@github.com/{username}/{repo_name}.git"
-    result = run_command(f"git remote add origin {remote_url}")
-    if not result:
-        print("❌ Failed to add remote. Check your username and token.")
-        return
+    # Add remote (ignore errors if it already exists)
+    subprocess.run(f"git remote add origin {remote_url}", shell=True, capture_output=True)
+    
+    # Set the URL in case remote exists but has wrong URL
+    run_command(f"git remote set-url origin {remote_url}")
     
     print("⬆️ Pushing to GitHub...")
-    result = run_command("git push -u origin main")
-    if not result:
-        print("❌ Failed to push to GitHub. Check your token permissions.")
+    push_result = subprocess.run("git push -u origin main", shell=True, capture_output=True, text=True)
+    if push_result.returncode != 0:
+        print(f"❌ Failed to push to GitHub: {push_result.stderr}")
+        print("Check your token permissions (needs 'repo' scope)")
         return
     
     print("✅ Code pushed to GitHub successfully!")
