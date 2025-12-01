@@ -22,9 +22,16 @@ function App() {
     }
     
     const currentPath = window.location.pathname;
-    if (currentPath !== '/') {
+    const hash = window.location.hash;
+    
+    // Check for hash-based routing first (GitHub Pages compatible)
+    if (hash && hash.startsWith('#/')) {
+      const pdfName = hash.slice(2);
+      console.log('Checking for PDF from hash:', pdfName);
+      checkAndLoadPDF(pdfName);
+    } else if (currentPath !== '/' && !currentPath.includes('/BookFlipper')) {
       const pdfName = currentPath.slice(1);
-      console.log('Checking for PDF:', pdfName);
+      console.log('Checking for PDF from path:', pdfName);
       checkAndLoadPDF(pdfName);
     }
   }, []);
@@ -270,7 +277,9 @@ function App() {
   const checkAndLoadPDF = async (pdfName) => {
     setIsLoading(true);
     try {
-      const pdfPath = `${process.env.PUBLIC_URL || ''}/${pdfName}.pdf`;
+      // Get base path for GitHub Pages or local
+      const basePath = process.env.PUBLIC_URL || (window.location.hostname === 'localhost' ? '' : window.location.pathname.split('/')[1] ? `/${window.location.pathname.split('/')[1]}` : '');
+      const pdfPath = `${basePath}/${pdfName}.pdf`;
       console.log('Attempting to load PDF:', pdfPath);
       const response = await fetch(pdfPath);
       if (!response.ok) {
