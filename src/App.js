@@ -390,7 +390,7 @@ function App() {
         </div>
       ) : (
         <div className="app" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Arial, sans-serif'}}>
-          <h1 style={{color: 'black'}}>PDF Flip Book</h1>
+          <h1 style={{color: 'black'}}>PDF Flip Book v2.0 - UPDATED</h1>
           <input
             type="text"
             placeholder="Enter Google Drive PDF link"
