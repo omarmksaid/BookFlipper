@@ -14,8 +14,14 @@ function App() {
   const fileInputRef = useRef(null);
   
   useEffect(() => {
-    // Set page title
-    document.title = 'PDF Flip Book';
+    // Set page title with timestamp to force cache refresh
+    document.title = 'PDF Flip Book - ' + Date.now();
+    
+    // Add cache-busting meta tag
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'Cache-Control';
+    meta.content = 'no-cache, no-store, must-revalidate';
+    document.head.appendChild(meta);
     
     // Load StPageFlip script
     if (!window.St) {
@@ -390,7 +396,7 @@ function App() {
         </div>
       ) : (
         <div className="app" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'Arial, sans-serif'}}>
-          <h1 style={{color: 'black'}}>PDF Flip Book v2.0 - UPDATED</h1>
+          <h1 style={{color: 'black'}}>PDF Flip Book v3.0 - CACHE BUSTED - {Date.now()}</h1>
           <input
             type="text"
             placeholder="Enter Google Drive PDF link"
